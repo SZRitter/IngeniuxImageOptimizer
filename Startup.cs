@@ -1,27 +1,30 @@
 using Imageflow.Server;
+using Imageflow.Server.HybridCache;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Imageflow.Server.HybridCache;
-using System.IO;
 
 namespace ImageOptimizer
 {
     public class Startup
     {
+        public Startup(IConfiguration configuration)
+        {
+            Configuration = configuration;
+        }
+
+        private IConfiguration Configuration { get; }
+
         // This method gets called by the runtime. Use this method to add services to the container.
         // For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddImageflowHybridCache(new HybridCacheOptions("//Mac/Home/Desktop/Transfer/ImageflowCache")
+            services.AddImageflowHybridCache(new HybridCacheOptions(Configuration.GetSection("ApplicationPaths").GetSection("Cache").Value)
             {
-                CacheSizeLimitInBytes = (long)1 * 1024 *1024 * 1024 //1GB
+                CacheSizeLimitInBytes = (long)1 * 1024 * 1024 * 1024 //1GB
             });
         }
 
@@ -44,8 +47,9 @@ namespace ImageOptimizer
             });
 
             app.UseImageflow(new ImageflowMiddlewareOptions()
-                .MapPath("/", "//Mac/Home/Desktop/Transfer/Boyne Resorts Meetings XML")
+                .MapPath("/", Configuration.GetSection("ApplicationPaths").GetSection("Xml").Value)
                 .SetAllowCaching(true)
+                .SetMyOpenSourceProjectUrl("https://github.com/SZRitter/IngeniuxImageOptimizer")
                 );
         }
     }
